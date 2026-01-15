@@ -1,8 +1,9 @@
 #include <stdio.h>
+#include <string.h>
 #include <malloc.h>
 
-#define MAX_STACK 100
-#define MAX_QUEUE 20
+#define MAX_STACK 4
+#define MAX_QUEUE 4
 
 typedef struct nodoPD{
 	int id;
@@ -24,7 +25,7 @@ typedef struct{
 	int qtdeIngressos;
 }pessoa;
 
-typedef struct{
+typedef struct nodoFD{
 	pessoa p;
 	struct nodoFD *prox; 
 }nodoFD;
@@ -34,7 +35,12 @@ typedef struct{
 	int tam;
 }filaDinamica;
 
-
+typedef struct{
+	pessoa vet[MAX_QUEUE];
+	int tam;
+	int ini;
+	int fim;
+}filaEstatica;
 
 
 //pilha dinamica
@@ -92,6 +98,7 @@ void destroiPD(pilhaDinamica *p) {
 	free(p);
 }
 
+
 //pilha estatica
 
 pilhaEstatica *inicializaPE() {
@@ -119,6 +126,7 @@ void imprimePE(pilhaEstatica *p) {
 	printf("\n");
 }
 
+
 //fila dinamica
 
 filaDinamica *inicializaFD() {
@@ -129,30 +137,110 @@ filaDinamica *inicializaFD() {
 }
 
 void pushFD(filaDinamica *f, pessoa pe) {
-	nodoFD *new = (nodoFD *)malloc(1*sizeof(1*nodoFD));
+	nodoFD *new = (nodoFD *)malloc(1*sizeof(nodoFD));
 	nodoFD *aux = f->ini;
+	f->tam++;
 	new->p = pe;
+	new->prox = NULL;
+	if(f->ini == NULL) f->ini = new;
+	else {
+		while(aux->prox != NULL) aux = aux->prox;
+		aux->prox = new;
+	}
+}
+
+pessoa topFD(filaDinamica *f) {
+	nodoFD *n = f->ini;
+	return n->p;
+}
+
+int tamFD(filaDinamica *f) { return f->tam; }
+
+void popFD(filaDinamica *f) {
+	if(f->ini == NULL) return;
+	nodoFD *aux = f->ini;
+	f->ini = aux->prox;
+	f->tam--;
+}
+
+void imprimeListaLigadaFD(nodoFD *n) {
+	if(n == NULL) return;
+	else {
+		imprimeListaLigadaFD(n->prox);
+		printf("%d %s\n", n->p.qtdeIngressos, n->p.nome);
+	}
+}
+
+void imprimeFD(filaDinamica *f) { printf("\n"); imprimeListaLigadaFD(f->ini); printf("\n");}
+
+void destroiListaLigadaFD(nodoFD *n) {
+	if(n == NULL) return;
+	destroiListaLigadaFD(n->prox);
+	free(n);
+}
+
+void destroiFD(filaDinamica *f) {
+	destroiListaLigadaFD(f->ini);
+	free(f);
+}
+
+
+//fila estatica
+
+filaEstatica *inicializaFE() {
+	filaEstatica *f = (filaEstatica *)malloc(1*sizeof(filaEstatica));
+	f->tam = f->ini = f->fim = 0;
+	return f;
+}
+
+void pushFE(filaEstatica *f, pessoa pe) {
+	f->vet[f->fim] = pe;
+	f->fim = (f->fim + 1) % MAX_QUEUE;
+	f->tam++;
+}
+
+void destroiFE(filaEstatica *f) { free(f); }
+
+pessoa topFE(filaEstatica *f) { return f->vet[f->ini]; }
+
+void popFE(filaEstatica *f) { f->ini = (f->ini + 1) % MAX_QUEUE; f->tam--; }
+
+int tamFE(filaEstatica *f) { return f->tam; }
+
+void imprimeFE(filaEstatica *f) {
+	int i = f->ini;
+	if(f->ini < f->fim) {
+		while(i < f->fim) {
+			printf("%s %d\n", f->vet[i].nome, f->vet[i].qtdeIngressos);
+			i++;
+		}	
+	}else if(f->fim <= f->ini) {
+		while(i < MAX_QUEUE) {
+			printf("%s %d\n", f->vet[i].nome, f->vet[i].qtdeIngressos);
+			i++;
+		}
+		i = 0;
+		while(i < f->fim) {
+			printf("%s %d\n", f->vet[i].nome, f->vet[i].qtdeIngressos);
+			i++;
+		}
+	}
+}
 
 
 
 
 
 
-
+pessoa criarPessoa(const char *name, int qtde) {
+    pessoa p;
+    strncpy(p.nome, name, 19);
+    p.nome[19] = '\0'; // Garantia de segurança para fechar a string
+    p.qtdeIngressos = qtde;
+    return p;
+}
 
 int main() {
-	pilhaEstatica *p = inicializaPE();
-	pushPE(p, 12);
-	pushPE(p, 13);
-	pushPE(p, 14);
-	pushPE(p, 15);
-	imprimePE(p);
-	printf("\ntam: %d\n", tamPE(p));
-	popPE(p);
-	popPE(p);
-	imprimePE(p);
-	printf("\ntop: %d\n", topPE(p));
-	printf("\ntam: %d\n", tamPE(p));
-	destroiPE(p);
+
 	return 0;
 }
